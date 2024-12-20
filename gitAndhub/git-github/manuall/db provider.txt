@@ -1,0 +1,239 @@
+// user provider
+
+import 'package:flutter/material.dart';
+
+import '../database/database_helper.dart';
+import '../models/user.dart';
+
+class UserProvider with ChangeNotifier {
+  List<User> _users = [];
+
+  List<User> get users => _users;
+
+  Future<void> fetchUsers() async {
+    _users = await DatabaseHelper().getUsers();
+    notifyListeners();
+  }
+
+  Future<void> addUser(User user) async {
+    await DatabaseHelper().insertUser(user);
+    fetchUsers();
+  }
+
+  Future<void> updateUser(User user) async {
+    await DatabaseHelper().updateUser(user);
+    fetchUsers();
+  }
+
+  Future<void> deleteUser(int id) async {
+    await DatabaseHelper().deleteUser(id);
+    fetchUsers();
+  }
+}
+
+
+
+
+// u data provider 
+
+import 'package:flutter/material.dart';
+
+import '../database/database_helper.dart';
+import '../models/u_data.dart';
+
+class UDataProvider with ChangeNotifier {
+  List<UData> _uDataList = [];
+
+  List<UData> get uDataList => _uDataList;
+
+  Future<void> fetchUData() async {
+    _uDataList = await DatabaseHelper().getUData();
+    notifyListeners();
+  }
+
+  Future<void> addUData(UData uData) async {
+    await DatabaseHelper().insertUData(uData);
+    fetchUData();
+  }
+
+  Future<void> updateUData(UData uData) async {
+    await DatabaseHelper().updateUData(uData);
+    fetchUData();
+  }
+
+  Future<void> deleteUData(int id) async {
+    await DatabaseHelper().deleteUData(id);
+    fetchUData();
+  }
+}
+
+
+
+// school provider
+
+
+import 'package:flutter/material.dart';
+
+import '../database/database_helper.dart';
+import '../models/school.dart';
+
+class SchoolProvider with ChangeNotifier {
+  List<School> _schools = [];
+
+  List<School> get schools => _schools;
+
+  Future<void> fetchSchools() async {
+    _schools = await DatabaseHelper().getSchools();
+    notifyListeners();
+  }
+
+  Future<void> addSchool(School school) async {
+    await DatabaseHelper().insertSchool(school);
+    fetchSchools();
+  }
+
+  Future<void> updateSchool(School school) async {
+    await DatabaseHelper().updateSchool(school);
+    fetchSchools();
+  }
+
+  Future<void> deleteSchool(int id) async {
+    await DatabaseHelper().deleteSchool(id);
+    fetchSchools();
+  }
+}
+
+
+
+// admin provider
+
+import 'package:flutter/material.dart';
+
+import '../database/database_helper.dart';
+import '../models/admin.dart';
+
+class AdminProvider with ChangeNotifier {
+  List<Admin> _admins = [];
+
+  List<Admin> get admins => _admins;
+
+  Future<void> fetchAdmins() async {
+    _admins = await DatabaseHelper().getAdmins();
+    notifyListeners();
+  }
+
+  Future<void> addAdmin(Admin admin) async {
+    await DatabaseHelper().insertAdmin(admin);
+    fetchAdmins();
+  }
+
+  Future<void> updateAdmin(Admin admin) async {
+    await DatabaseHelper().updateAdmin(admin);
+    fetchAdmins();
+  }
+
+  Future<void> deleteAdmin(int id) async {
+    await DatabaseHelper().deleteAdmin(id);
+    fetchAdmins();
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'database/database_helper.dart';
+import 'models/user.dart';
+import 'models/u_data.dart';
+import 'models/school.dart';
+import 'models/admin.dart';
+import 'providers/user_provider.dart';
+import 'providers/u_data_provider.dart';
+import 'providers/school_provider.dart';
+import 'providers/admin_provider.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => UDataProvider()),
+        ChangeNotifierProvider(create: (_) => SchoolProvider()),
+        ChangeNotifierProvider(create: (_) => AdminProvider()),
+      ],
+      child: MaterialApp(
+        home: Scaffold(
+          appBar: AppBar(title: Text('Flutter SQLite Example')),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                ElevatedButton(
+                  onPressed: () async {
+                    DatabaseHelper databaseHelper = DatabaseHelper();
+
+                    // Insert User
+                    User user = User(uname: 'JohnDoe', email: 'john@example.com', pass: 'password123');
+                    await databaseHelper.insertUser(user);
+
+                    // Insert UData
+                    UData uData = UData(uid: 1, sid: 1, fname: 'John', lname: 'Doe', phone: '123456789', address: '123 Main St');
+                    await databaseHelper.insertUData(uData);
+
+                    // Insert School
+                    School school = School(eiin: '123456', semail: 'school@example.com', sname: 'ABC School', saddress: '456 School St', sphone: '987654321');
+                    await databaseHelper.insertSchool(school);
+
+                    // Insert Admin
+                    Admin admin = Admin(sid: 1, aname: 'Admin', phone: '111222333', email: 'admin@example.com', uid: 1);
+                    await databaseHelper.insertAdmin(admin);
+
+                    // Retrieve Data
+                    List<User> users = await databaseHelper.getUsers();
+                    List<UData> uDataList = await databaseHelper.getUData();
+                    List<School> schools = await databaseHelper.getSchools();
+                    List<Admin> admins = await databaseHelper.getAdmins();
+
+                    print(users);
+                    print(uDataList);
+                    print(schools);
+                    print(admins);
+
+                    // Update User
+                    user = users.first;
+                    user.uname = 'UpdatedName';
+                    await databaseHelper.updateUser(user);
+
+                    // Delete User
+                    await databaseHelper.deleteUser(user.id!);
+
+                    // Retrieve Data Again
+                    users = await databaseHelper.getUsers();
+                    print(users);
+                  },
+                  child: Text('Insert, Update, Delete, Retrieve Data'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

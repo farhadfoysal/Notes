@@ -1,0 +1,761 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:sqflite/sqflite.dart';
+
+import '../models/user.dart';
+import '../models/u_data.dart';
+import '../models/school.dart';
+import '../models/admin.dart';
+
+class DatabaseHelper {
+  static final DatabaseHelper _instance = DatabaseHelper._internal();
+  factory DatabaseHelper() => _instance;
+
+  static Database? _database;
+
+  DatabaseHelper._internal();
+
+  Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await _initDatabase();
+    return _database!;
+  }
+
+  Future<Database> _initDatabase() async {
+    Directory documentsDirectory = await getApplicationDocumentsDirectory();
+    String path = join(documentsDirectory.path, 'my_database.db');
+    return await openDatabase(path, version: 1, onCreate: _onCreate);
+  }
+
+  Future<void> _onCreate(Database db, int version) async {
+    await db.execute('''
+      CREATE TABLE user (
+        id INTEGER PRIMARY KEY,
+        uname TEXT,
+        email TEXT,
+        pass TEXT
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE u_data (
+        id INTEGER PRIMARY KEY,
+        uid INTEGER,
+        sid INTEGER,
+        fname TEXT,
+        lname TEXT,
+        phone TEXT,
+        address TEXT
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE school (
+        id INTEGER PRIMARY KEY,
+        eiin TEXT,
+        semail TEXT,
+        sname TEXT,
+        saddress TEXT,
+        sphone TEXT
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE admin (
+        id INTEGER PRIMARY KEY,
+        sid INTEGER,
+        aname TEXT,
+        phone TEXT,
+        email TEXT,
+        uid INTEGER
+      )
+    ''');
+  }
+
+  // User CRUD operations
+  Future<int> insertUser(User user) async {
+    Database db = await database;
+    return await db.insert('user', user.toMap());
+  }
+
+  Future<int> updateUser(User user) async {
+    Database db = await database;
+    return await db.update('user', user.toMap(), where: 'id = ?', whereArgs: [user.id]);
+  }
+
+  Future<int> deleteUser(int id) async {
+    Database db = await database;
+    return await db.delete('user', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<User>> getUsers() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('user');
+    return List.generate(maps.length, (i) {
+      return User.fromMap(maps[i]);
+    });
+  }
+
+  Future<User?> getUserById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('user', where: 'id = ?', whereArgs: [id]);
+    if (maps.isNotEmpty) {
+      return User.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  // UData CRUD operations
+  Future<int> insertUData(UData uData) async {
+    Database db = await database;
+    return await db.insert('u_data', uData.toMap());
+  }
+
+  Future<int> updateUData(UData uData) async {
+    Database db = await database;
+    return await db.update('u_data', uData.toMap(), where: 'id = ?', whereArgs: [uData.id]);
+  }
+
+  Future<int> deleteUData(int id) async {
+    Database db = await database;
+    return await db.delete('u_data', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<UData>> getUData() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('u_data');
+    return List.generate(maps.length, (i) {
+      return UData.fromMap(maps[i]);
+    });
+  }
+
+  Future<UData?> getUDataById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('u_data', where: 'id = ?', whereArgs: [id]);
+    if (maps.isNotEmpty) {
+      return UData.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  Future<List<UData>> getUDataByUid(int uid) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('u_data', where: 'uid = ?', whereArgs: [uid]);
+    return List.generate(maps.length, (i) {
+      return UData.fromMap(maps[i]);
+    });
+  }
+
+  Future<List<UData>> getUDataBySid(int sid) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('u_data', where: 'sid = ?', whereArgs: [sid]);
+    return List.generate(maps.length, (i) {
+      return UData.fromMap(maps[i]);
+    });
+  }
+
+  // School CRUD operations
+  Future<int> insertSchool(School school) async {
+    Database db = await database;
+    return await db.insert('school', school.toMap());
+  }
+
+  Future<int> updateSchool(School school) async {
+    Database db = await database;
+    return await db.update('school', school.toMap(), where: 'id = ?', whereArgs: [school.id]);
+  }
+
+  Future<int> deleteSchool(int id) async {
+    Database db = await database;
+    return await db.delete('school', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<School>> getSchools() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('school');
+    return List.generate(maps.length, (i) {
+      return School.fromMap(maps[i]);
+    });
+  }
+
+  Future<School?> getSchoolById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('school', where: 'id = ?', whereArgs: [id]);
+    if (maps.isNotEmpty) {
+      return School.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  // Admin CRUD operations
+  Future<int> insertAdmin(Admin admin) async {
+    Database db = await database;
+    return await db.insert('admin', admin.toMap());
+  }
+
+  Future<int> updateAdmin(Admin admin) async {
+    Database db = await database;
+    return await db.update('admin', admin.toMap(), where: 'id = ?', whereArgs: [admin.id]);
+  }
+
+  Future<int> deleteAdmin(int id) async {
+    Database db = await database;
+    return await db.delete('admin', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<Admin>> getAdmins() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('admin');
+    return List.generate(maps.length, (i) {
+      return Admin.fromMap(maps[i]);
+    });
+  }
+
+  Future<Admin?> getAdminById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('admin', where: 'id = ?', whereArgs: [id]);
+    if (maps.isNotEmpty) {
+      return Admin.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  Future<List<Admin>> getAdminsBySid(int sid) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('admin', where: 'sid = ?', whereArgs: [sid]);
+    return List.generate(maps.length, (i) {
+      return Admin.fromMap(maps[i]);
+    });
+  }
+
+  Future<List<Admin>> getAdminsByUid(int uid) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('admin', where: 'uid = ?', whereArgs: [uid]);
+    return List.generate(maps.length, (i) {
+      return Admin.fromMap(maps[i]);
+    });
+  }
+
+  Future<void> close() async {
+    Database db = await database;
+    db.close();
+    _database = null;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import 'package:flutter/material.dart';
+
+import '../database/database_helper.dart';
+import '../models/user.dart';
+
+class UserProvider with ChangeNotifier {
+  List<User> _users = [];
+  User? _selectedUser;
+
+  List<User> get users => _users;
+  User? get selectedUser => _selectedUser;
+
+  Future<void> fetchUsers() async {
+    _users = await DatabaseHelper().getUsers();
+    notifyListeners();
+  }
+
+  Future<void> fetchUserById(int id) async {
+    _selectedUser = await DatabaseHelper().getUserById(id);
+    notifyListeners();
+  }
+
+  Future<void> addUser(User user) async {
+    await DatabaseHelper().insertUser(user);
+    fetchUsers();
+  }
+
+  Future<void> updateUser(User user) async {
+    await DatabaseHelper().updateUser(user);
+    fetchUsers();
+  }
+
+  Future<void> deleteUser(int id) async {
+    await DatabaseHelper().deleteUser(id);
+    fetchUsers();
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+import 'package:flutter/material.dart';
+
+import '../database/database_helper.dart';
+import '../models/u_data.dart';
+
+class UDataProvider with ChangeNotifier {
+  List<UData> _uDataList = [];
+  UData? _selectedUData;
+
+  List<UData> get uDataList => _uDataList;
+  UData? get selectedUData => _selectedUData;
+
+  Future<void> fetchUData() async {
+    _uDataList = await DatabaseHelper().getUData();
+    notifyListeners();
+  }
+
+  Future<void> fetchUDataById(int id) async {
+    _selectedUData = await DatabaseHelper().getUDataById(id);
+    notifyListeners();
+  }
+
+  Future<void> fetchUDataByUid(int uid) async {
+    _uDataList = await DatabaseHelper().getUDataByUid(uid);
+    notifyListeners();
+  }
+
+  Future<void> fetchUDataBySid(int sid) async {
+    _uDataList = await DatabaseHelper().getUDataBySid(sid);
+    notifyListeners();
+  }
+
+  Future<void> addUData(UData uData) async {
+    await DatabaseHelper().insertUData(uData);
+    fetchUData();
+  }
+
+  Future<void> updateUData(UData uData) async {
+    await DatabaseHelper().updateUData(uData);
+    fetchUData();
+  }
+
+  Future<void> deleteUData(int id) async {
+    await DatabaseHelper().deleteUData(id);
+    fetchUData();
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import 'package:flutter/material.dart';
+
+import '../database/database_helper.dart';
+import '../models/school.dart';
+
+class SchoolProvider with ChangeNotifier {
+  List<School> _schools = [];
+  School? _selectedSchool;
+
+  List<School> get schools => _schools;
+  School? get selectedSchool => _selectedSchool;
+
+  Future<void> fetchSchools() async {
+    _schools = await DatabaseHelper().getSchools();
+    notifyListeners();
+  }
+
+  Future<void> fetchSchoolById(int id) async {
+    _selectedSchool = await DatabaseHelper().getSchoolById(id);
+    notifyListeners();
+  }
+
+  Future<void> addSchool(School school) async {
+    await DatabaseHelper().insertSchool(school);
+    fetchSchools();
+  }
+
+  Future<void> updateSchool(School school) async {
+    await DatabaseHelper().updateSchool(school);
+    fetchSchools();
+  }
+
+  Future<void> deleteSchool(int id) async {
+    await DatabaseHelper().deleteSchool(id);
+    fetchSchools();
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import 'package:flutter/material.dart';
+
+import '../database/database_helper.dart';
+import '../models/admin.dart';
+
+class AdminProvider with ChangeNotifier {
+  List<Admin> _admins = [];
+  Admin? _selectedAdmin;
+
+  List<Admin> get admins => _admins;
+  Admin? get selectedAdmin => _selectedAdmin;
+
+  Future<void> fetchAdmins() async {
+    _admins = await DatabaseHelper().getAdmins();
+    notifyListeners();
+  }
+
+  Future<void> fetchAdminById(int id) async {
+    _selectedAdmin = await DatabaseHelper().getAdminById(id);
+    notifyListeners();
+  }
+
+  Future<void> fetchAdminsBySid(int sid) async {
+    _admins = await DatabaseHelper().getAdminsBySid(sid);
+    notifyListeners();
+  }
+
+  Future<void> fetchAdminsByUid(int uid) async {
+    _admins = await DatabaseHelper().getAdminsByUid(uid);
+    notifyListeners();
+  }
+
+  Future<void> addAdmin(Admin admin) async {
+    await DatabaseHelper().insertAdmin(admin);
+    fetchAdmins();
+  }
+
+  Future<void> updateAdmin(Admin admin) async {
+    await DatabaseHelper().updateAdmin(admin);
+    fetchAdmins();
+  }
+
+  Future<void> deleteAdmin(int id) async {
+    await DatabaseHelper().deleteAdmin(id);
+    fetchAdmins();
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import 'dart:async';
+import 'dart:io';
+
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:sqflite/sqflite.dart';
+
+import '../models/user.dart';
+import '../models/u_data.dart';
+import '../models/school.dart';
+import '../models/admin.dart';
+
+class DatabaseHelper {
+  static final DatabaseHelper _instance = DatabaseHelper._internal();
+  factory DatabaseHelper() => _instance;
+
+  static Database? _database;
+
+  DatabaseHelper._internal();
+
+  Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await _initDatabase();
+    return _database!;
+  }
+
+  Future<Database> _initDatabase() async {
+    Directory documentsDirectory = await getApplicationDocumentsDirectory();
+    String path = join(documentsDirectory.path, 'my_database.db');
+    return await openDatabase(path, version: 1, onCreate: _onCreate);
+  }
+
+  Future<void> _onCreate(Database db, int version) async {
+    await db.execute('''
+      CREATE TABLE user (
+        id INTEGER PRIMARY KEY,
+        uname TEXT,
+        email TEXT,
+        pass TEXT
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE u_data (
+        id INTEGER PRIMARY KEY,
+        uid INTEGER,
+        sid INTEGER,
+        fname TEXT,
+        lname TEXT,
+        phone TEXT,
+        address TEXT
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE school (
+        id INTEGER PRIMARY KEY,
+        eiin TEXT,
+        semail TEXT,
+        sname TEXT,
+        saddress TEXT,
+        sphone TEXT
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE admin (
+        id INTEGER PRIMARY KEY,
+        sid INTEGER,
+        aname TEXT,
+        phone TEXT,
+        email TEXT,
+        uid INTEGER
+      )
+    ''');
+  }
+
+  // User CRUD operations
+  Future<int> insertUser(User user) async {
+    Database db = await database;
+    return await db.insert('user', user.toMap());
+  }
+
+  Future<int> updateUser(User user) async {
+    Database db = await database;
+    return await db.update('user', user.toMap(), where: 'id = ?', whereArgs: [user.id]);
+  }
+
+  Future<int> deleteUser(int id) async {
+    Database db = await database;
+    return await db.delete('user', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<User>> getUsers() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('user');
+    return List.generate(maps.length, (i) {
+      return User.fromMap(maps[i]);
+    });
+  }
+
+  Future<User?> getUserById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('user', where: 'id = ?', whereArgs: [id]);
+    if (maps.isNotEmpty) {
+      return User.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  // UData CRUD operations
+  Future<int> insertUData(UData uData) async {
+    Database db = await database;
+    return await db.insert('u_data', uData.toMap());
+  }
+
+  Future<int> updateUData(UData uData) async {
+    Database db = await database;
+    return await db.update('u_data', uData.toMap(), where: 'id = ?', whereArgs: [uData.id]);
+  }
+
+  Future<int> deleteUData(int id) async {
+    Database db = await database;
+    return await db.delete('u_data', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<UData>> getUData() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('u_data');
+    return List.generate(maps.length, (i) {
+      return UData.fromMap(maps[i]);
+    });
+  }
+
+  Future<UData?> getUDataById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('u_data', where: 'id = ?', whereArgs: [id]);
+    if (maps.isNotEmpty) {
+      return UData.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  Future<List<UData>> getUDataByUid(int uid) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('u_data', where: 'uid = ?', whereArgs: [uid]);
+    return List.generate(maps.length, (i) {
+      return UData.fromMap(maps[i]);
+    });
+  }
+
+  Future<List<UData>> getUDataBySid(int sid) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('u_data', where: 'sid = ?', whereArgs: [sid]);
+    return List.generate(maps.length, (i) {
+      return UData.fromMap(maps[i]);
+    });
+  }
+
+  // School CRUD operations
+  Future<int> insertSchool(School school) async {
+    Database db = await database;
+    return await db.insert('school', school.toMap());
+  }
+
+  Future<int> updateSchool(School school) async {
+    Database db = await database;
+    return await db.update('school', school.toMap(), where: 'id = ?', whereArgs: [school.id]);
+  }
+
+  Future<int> deleteSchool(int id) async {
+    Database db = await database;
+    return await db.delete('school', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<School>> getSchools() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('school');
+    return List.generate(maps.length, (i) {
+      return School.fromMap(maps[i]);
+    });
+  }
+
+  Future<School?> getSchoolById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('school', where: 'id = ?', whereArgs: [id]);
+    if (maps.isNotEmpty) {
+      return School.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  // Admin CRUD operations
+  Future<int> insertAdmin(Admin admin) async {
+    Database db = await database;
+    return await db.insert('admin', admin.toMap());
+  }
+
+  Future<int> updateAdmin(Admin admin) async {
+    Database db = await database;
+    return await db.update('admin', admin.toMap(), where: 'id = ?', whereArgs: [admin.id]);
+  }
+
+  Future<int> deleteAdmin(int id) async {
+    Database db = await database;
+    return await db.delete('admin', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<Admin>> getAdmins() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('admin');
+    return List.generate(maps.length, (i) {
+      return Admin.fromMap(maps[i]);
+    });
+  }
+
+  Future<Admin?> getAdminById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('admin', where: 'id = ?', whereArgs: [id]);
+    if (maps.isNotEmpty) {
+      return Admin.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  Future<List<Admin>> getAdminsBySid(int sid) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('admin', where: 'sid = ?', whereArgs: [sid]);
+    return List.generate(maps.length, (i) {
+      return Admin.fromMap(maps[i]);
+    });
+  }
+
+  Future<List<Admin>> getAdminsByUid(int uid) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('admin', where: 'uid = ?', whereArgs: [uid]);
+    return List.generate(maps.length, (i) {
+      return Admin.fromMap(maps[i]);
+    });
+  }
+
+  Future<void> close() async {
+    Database db = await database;
+    db.close();
+    _database = null;
+  }
+
+  // New Method to Get Combined Data
+  Future<List<Map<String, dynamic>>> getUserUDataSchool() async {
+    Database db = await database;
+    String sql = '''
+      SELECT user.id AS user_id, user.uname, user.email, user.pass,
+             u_data.id AS udata_id, u_data.uid, u_data.sid, u_data.fname, u_data.lname, u_data.phone, u_data.address,
+             school.id AS school_id, school.eiin, school.semail, school.sname, school.saddress, school.sphone
+      FROM user
+      INNER JOIN u_data ON user.id = u_data.uid
+      INNER JOIN school ON u_data.sid = school.id
+    ''';
+    List<Map<String, dynamic>> result = await db.rawQuery(sql);
+    return result;
+  }
+}
+

@@ -1,0 +1,42 @@
+#include<iostream>
+#include<string>
+#include<ctime>
+using namespace std;
+
+string printing(int count){
+      if(count>0){
+        cout<<"Not Accepted"<<endl;
+      }else{
+        cout<<"Accepted"<<endl;
+      }
+}
+
+int checking(string a, int s, int count){
+
+    for(int i=0; i<s; i++){
+        if(a[i]!='a'){
+            count++;
+        }else{
+            count = 0;
+        }
+    }
+
+    return count;
+}
+
+int main(){
+
+    string a = "aaab";
+    int s = a.size();
+    int count = 0;
+
+
+    count = checking(a,s,count);
+
+    printing(count);
+
+
+    return 0;
+}
+
+

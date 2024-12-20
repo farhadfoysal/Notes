@@ -1,0 +1,118 @@
+inflation, unemployment, national income, hum final
+
+classorganizer-9eb8d
+
+keytool -list -v -keystore C:\Users\USER\.android\debug.keystore -alias androiddebugkey -storepass android -keypass android
+
+1//0gpu3sQQbIn0DCgYIARAAGBASNwF-L9IrxyOhlhULlB6TE_0BsXVkXPd62KCZkSswtuBIOMQs_HlERLNkJD2mR3PtG0sQubv7aAQ
+
+
+Platform  Firebase App Id
+web       1:168100674425:web:24945e9f3f2273ce9b0da8
+android   1:168100674425:android:09e9f744892909b39b0da8
+ios       1:168100674425:ios:fe1378346cb94f8a9b0da8
+windows   1:168100674425:web:00982f32f3b6e22f9b0da8
+
+
+import 'dart:async';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
+
+StreamSubscription<InternetConnectionStatus> checkConnectionContinuously() {
+  return InternetConnectionChecker().onStatusChange.listen((InternetConnectionStatus status) {
+    if (status == InternetConnectionStatus.connected) {
+      // Handle connected state
+      print('Connected to the internet');
+    } else {
+      // Handle disconnected state
+      print('Disconnected from the internet');
+    }
+  });
+}
+
+
+StreamSubscription<InternetConnectionStatus>? connectionSubscription;
+
+void startListening() {
+  connectionSubscription = checkConnectionContinuously();
+}
+
+void stopListening() {
+  connectionSubscription?.cancel();
+}
+
+@override
+void dispose() {
+  stopListening();
+  super.dispose();
+}
+
+
+
+import 'package:flutter/material.dart';
+import 'internet_connection_checker.dart'; // Import the above class
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Internet Connection Check',
+      home: InternetCheckPage(),
+    );
+  }
+}
+
+class InternetCheckPage extends StatefulWidget {
+  @override
+  _InternetCheckPageState createState() => _InternetCheckPageState();
+}
+
+class _InternetCheckPageState extends State<InternetCheckPage> {
+  bool isConnected = false;
+  late StreamSubscription subscription;
+  final internetChecker = InternetConnectionChecker();
+
+  @override
+  void initState() {
+    super.initState();
+    checkConnection();
+
+    // Listen for connection status changes
+    subscription = internetChecker.checkConnectionContinuously((status) {
+      setState(() {
+        isConnected = status;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    subscription.cancel();
+    super.dispose();
+  }
+
+  void checkConnection() async {
+    bool result = await internetChecker.hasInternetConnection();
+    setState(() {
+      isConnected = result;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Internet Connection Checker'),
+      ),
+      body: Center(
+        child: Text(
+          isConnected ? 'Connected to the Internet' : 'No Internet Connection',
+          style: TextStyle(fontSize: 20),
+        ),
+      ),
+    );
+  }
+}

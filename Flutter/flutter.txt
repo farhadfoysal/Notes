@@ -1,0 +1,12 @@
+Installation-> flutter sdk install
+
+Flutter Details-> flutter doctor, flutter doctor -v
+
+Flutter Sdk Update-> flutter upgrade
+
+Project Creation-> flutter create app_name
+
+go to project directory-> cd app_name
+
+run flutter project-> flutter run
+

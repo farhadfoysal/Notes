@@ -1,0 +1,237 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); // Initialize Firebase
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: HomePage(),
+    );
+  }
+}
+
+// School model
+class School {
+  final String id;
+  final String name;
+  final String location;
+  final int totalStudents;
+
+  School({
+    required this.id,
+    required this.name,
+    required this.location,
+    required this.totalStudents,
+  });
+
+  // Factory method to parse Firebase data
+  factory School.fromMap(Map<dynamic, dynamic> data, String id) {
+    return School(
+      id: id,
+      name: data['name'] ?? '',
+      location: data['location'] ?? '',
+      totalStudents: data['totalStudents'] ?? 0,
+    );
+  }
+
+  // Convert object to map (for saving to Firebase)
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'location': location,
+      'totalStudents': totalStudents,
+    };
+  }
+}
+
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final FirebaseDatabase _database = FirebaseDatabase.instance;
+  List<School> _schools = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSchoolData();
+  }
+
+  // Method to fetch schools data from Firebase
+  void _fetchSchoolData() {
+    DatabaseReference schoolsRef = _database.reference().child('schools');
+    
+    schoolsRef.onValue.listen((event) {
+      final List<School> loadedSchools = [];
+      final Map<dynamic, dynamic>? schoolData = event.snapshot.value;
+
+      if (schoolData != null) {
+        schoolData.forEach((key, value) {
+          final school = School.fromMap(value, key);
+          loadedSchools.add(school);
+        });
+      }
+
+      setState(() {
+        _schools = loadedSchools;
+      });
+    });
+  }
+
+  // Function to handle menu actions (Edit, Delete, Duplicate)
+  void onMenuSelected(String action, School school) {
+    switch (action) {
+      case 'edit':
+        _editSchool(school); // Handle edit
+        break;
+      case 'delete':
+        _deleteSchool(school.id); // Handle delete
+        break;
+      case 'duplicate':
+        _duplicateSchool(school); // Handle duplicate
+        break;
+    }
+  }
+
+  // Edit school method (show dialog to edit)
+  void _editSchool(School school) {
+    TextEditingController nameController = TextEditingController(text: school.name);
+    TextEditingController locationController = TextEditingController(text: school.location);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Edit School'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: 'School Name'),
+              ),
+              TextField(
+                controller: locationController,
+                decoration: InputDecoration(labelText: 'Location'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                _database.reference().child('schools').child(school.id).set({
+                  'name': nameController.text,
+                  'location': locationController.text,
+                  'totalStudents': school.totalStudents,
+                });
+                Navigator.of(context).pop();
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Delete school from Firebase
+  void _deleteSchool(String id) {
+    _database.reference().child('schools').child(id).remove();
+  }
+
+  // Duplicate school
+  void _duplicateSchool(School school) {
+    DatabaseReference schoolsRef = _database.reference().child('schools');
+    final newSchool = School(
+      id: schoolsRef.push().key!,
+      name: school.name + ' (Copy)',
+      location: school.location,
+      totalStudents: school.totalStudents,
+    );
+    schoolsRef.child(newSchool.id).set(newSchool.toMap());
+  }
+
+  // Handle swipe actions
+  void onDismissed(DismissDirection direction, School school) {
+    if (direction == DismissDirection.startToEnd) {
+      _editSchool(school); // Swipe right to edit
+    } else if (direction == DismissDirection.endToStart) {
+      _deleteSchool(school.id); // Swipe left to delete
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('School List'),
+      ),
+      body: _schools.isEmpty
+          ? Center(child: CircularProgressIndicator()) // Show loading spinner if no data
+          : ListView.builder(
+              itemCount: _schools.length,
+              itemBuilder: (context, index) {
+                final school = _schools[index];
+                return Dismissible(
+                  key: Key(school.id), // Unique key for each item
+                  direction: DismissDirection.horizontal, // Allow swiping left and right
+                  onDismissed: (direction) => onDismissed(direction, school),
+                  background: Container(
+                    color: Colors.green, // Background when swiping right
+                    alignment: Alignment.centerLeft,
+                    padding: EdgeInsets.only(left: 20.0),
+                    child: Icon(Icons.edit, color: Colors.white), // Edit icon
+                  ),
+                  secondaryBackground: Container(
+                    color: Colors.red, // Background when swiping left
+                    alignment: Alignment.centerRight,
+                    padding: EdgeInsets.only(right: 20.0),
+                    child: Icon(Icons.delete, color: Colors.white), // Delete icon
+                  ),
+                  child: ListTile(
+                    title: Text(school.name),
+                    subtitle: Text('Location: ${school.location}'),
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (value) => onMenuSelected(value, school),
+                      itemBuilder: (BuildContext context) {
+                        return [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Text('Edit'),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Text('Delete'),
+                          ),
+                          PopupMenuItem(
+                            value: 'duplicate',
+                            child: Text('Duplicate'),
+                          ),
+                        ];
+                      },
+                      icon: Icon(Icons.more_vert), // 3-dot menu
+                    ),
+                    onTap: () {
+                      // Optional: Handle tap on the school item
+                      print('Tapped on ${school.name}');
+                    },
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}

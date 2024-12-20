@@ -1,0 +1,183 @@
+1. MaterialApp->1. titile:
+		2. theme: -> (1. (ThemeData-> (1. colorScheme:-> ColorScheme.fromSeed->1.seedColor->1.Color.) 2.useMaterial3:))
+		3. home: -> (1.(Scaffold-> 1. (appBar:-> AppBar-> 1. title:)) 2. (floatingActionButton: -> 1. (FloatingActionButton-> 1. onPressed-> )) 2.body:Text->)
+		4. 
+
+
+
+2. theme: -> 1. ThmeData 2. 
+3. ThemeData-> 1. colorScheme: 2. useMaterial3: true
+4. colorScheme: -> 1. ColorScheme.fromSeed 2.
+5. ColorScheme.fromSeed-> 1. seedColor: 2. 
+6. seedColor: -> 1. Color.color_name
+
+7. home: -> 1. Scaffold 2. 
+8. Scaffold-> 1. appBar: 2. floatingActionButton: 3. body: 4. 
+9. appBar:-> 1. AppBar 2. 
+10. AppBar-> 1. title: Text() 2. 
+11. floatingActionButton: -> 1. onPressed 2. 
+12. onPressed-> 1. 
+13. body: -> 1. Text() 2. 
+14. const Image(
+  	image: NetworkImage('https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg'),
+	)
+15.       body: Column(
+        children: [
+          Container(
+            height: 200,
+            width: 200,
+            color: Colors.red,
+          ),
+          Container(
+            height: 200,
+            width: 200,
+            color: Colors.yellow,
+          )
+        ],
+      ),
+16.       body: Row(
+        children: [
+          Container(
+            height: 200,
+            width: 200,
+            color: Colors.red,
+          ),
+          Container(
+            height: 200,
+            width: 200,
+            color: Colors.yellow,
+          )
+        ],
+      ),
+17.       body: Stack(
+        children: [
+          Container(
+            height: 200,
+            width: 200,
+            color: Colors.red,
+          ),
+          Container(
+            height: 200,
+            width: 200,
+            color: Colors.yellow,
+          )
+        ],
+      ),
+18.     onPressed: () {
+          Navigator.of(context).push(MaterialPageRoute(builder: (context)=> AboutScreen()));
+        },
+
+19.   child: ElevatedButton(child: const Text("About Screen"),onPressed: () {
+          Navigator.of(context).pop();
+      },)
+
+
+19. appBar: 
+	
+	actions:
+	title:
+	backgroundColor:
+	elevation:
+	shape:
+	
+
+
+
+
+<a href="https://ibb.co/yF0Tn3d"><img src="https://i.ibb.co/5hTDW7G/Whats-App-Image-2024-07-05-at-01-33-30-aeec8989.jpg" alt="Whats-App-Image-2024-07-05-at-01-33-30-aeec8989" border="0" /></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Class Organizer',
+
+      theme: ThemeData(
+
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text("Farhad Foysal"),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: (){
+
+          },
+        ),
+        body: Text("Class Organizer Application")),
+    );
+  }
+}
